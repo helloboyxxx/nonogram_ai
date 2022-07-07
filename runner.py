@@ -4,7 +4,7 @@ from nonogram import Nonogram
       
 def main():
   if len(sys.argv) != 2:
-      sys.exit("Usage: python nonogram.py tree.txt")
+      sys.exit("Usage: python runner.py tree.txt")
   
   height, width, prompt_x, ans = Nonogram.load_data(sys.argv[1])
 
