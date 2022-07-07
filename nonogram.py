@@ -1,49 +1,64 @@
+from dataclasses import dataclass
+from itertools import count
+
 O = "O"
 X = "X"
 PROMPT = "#"
 EMPTY = None
 
 class Nonogram():
-  def __init__(self, height, width, prompt_x, ans=None):
-    if ans == None:
+  def __init__(self, height, width, prompt_x, ans, h_task, v_task):
+    if ans == None or len(ans) == 0:  # Do we need to check if the ans is valid?
       raise RuntimeError("Answer not given. Please give an answer set")
     
     self.height = height
     self.width = width
-    self.x_set = prompt_x
-    self.ans = ans  # Records the positions of black blocks, the "O"s
 
-    # Initialize an empty board
+    self.prompt_x = prompt_x
+    self.x_set = []
+    self.o_set = [] # At first, player has found no "O"
+
     self.board = []
-    for i in range(self.height):
-      row = []
-      for j in range(self.width):
-        row.append(EMPTY)
-      self.board.append(row)
 
-    # Update the board according to "known_x"
-    # print("X_SET: ")
-    # print(self.x_set)
-    for i in range(self.height):
-      for j in range(self.width):
-        if (i, j) in self.x_set:
-          self.board[i][j] = X
-    # At first, player has found no "O"
-    self.o_set = set()
+    self.ans = ans  # Records the positions of black blocks, the "O"s
+    self.hearts = 3  # Records the rest of player's lives
+
+    self.reset()
+
+
+  def reverse_symbol(symbol):
+    if symbol == O:
+      return X
+    elif symbol == X:
+      return O
+    return None
 
   def count_task(filename):
-    pass
+    """
+    Given the filename, this function should count and calculate the "tasks".
+    This function returns two lists, vertical task and horizontal task. 
+    Each lists stores every single task as a list. So it should look like:
+    h_task = [ [2, 1], [3, 1], [1, 3], [3, 1], [2, 1] ]
+    v_task = [ [5], [2, 2], [3], [1], [5] ]
+    These are the data from tree.txt
+    """
+    # raise NotImplementedError
+
+    h_task = [ [2, 1], [3, 1], [1, 3], [3, 1], [2, 1] ]
+    v_task = [ [5], [2, 2], [3], [1], [5] ]
+
+    return h_task, v_task
 
   def load_data(filename):
     """
     Reads data from txt that stores the puzzle
     """
-    prompt_x = []
-    ans = []
     height = None
     width = None
-    with open(filename, "r") as f: 
-      lines = f.readlines()
+    prompt_x = []
+    ans = []
+    with open(filename) as f: 
+      lines = f.read().splitlines()
       height = len(lines)
       width = len(lines[0])
       for idx,line in enumerate(lines):
@@ -52,10 +67,13 @@ class Nonogram():
           if line[c] == PROMPT:
             prompt_x.append((idx, c))
           if line[c] == O:
-            ans.append((idx, c))   
-    return height, width, prompt_x, ans
+            ans.append((idx, c))
 
-  def update_board(self, cell, symbol):
+    # TODO
+    h_task, v_task = Nonogram.count_task(filename)
+    return height, width, prompt_x, ans, h_task, v_task
+
+  def update_board(self, symbol, cell):
     """
       Cell is given as a pair, representing the location of the given symbol
     """
@@ -67,27 +85,52 @@ class Nonogram():
       raise RuntimeError(f"Position ({row}, {col}) has been occupied")
 
     self.board[row][col] = symbol
+    if symbol == O:
+      self.o_set.append(cell)
+    elif symbol == X:
+      self.x_set.append(cell)
 
-
-  def check_move(self, cell, symbol):
-    if self.board[cell] != EMPTY:
+  def check_move(self, symbol, cell):
+    """
+    Given the moves made by player, return True if this move is correct,
+    return False if this move is wrong
+    """
+    if self.board[cell[0]][cell[1]] != EMPTY:
       raise RuntimeError(f"Position ({cell[0]}, {cell[1]}) has been occupied")
+    
+    # TODO
     print("TO BE CHECKED")
 
-
+    return True
 
   def print_board(self):
+    print(f"{self.hearts} hearts left")
     for i in range(self.height):
       for j in range(self.width):
         if self.board[i][j] == EMPTY:
-          print("_ ", end="")
+          print("_ ", end="")  # Represent the empty cell
         else: 
-          print(self.board[i][j], end=" ")
+          print(self.board[i][j], end=" ")  # Print the symbol on the board
       print()
   
+  def reset(self):
+    self.x_set = self.prompt_x
+    self.o_set = []
+    self.board = []
+    self.hearts = 3
 
+    # Initialize an empty board
+    for i in range(self.height):
+      row = []
+      for j in range(self.width):
+        row.append(EMPTY)
+      self.board.append(row)
 
-    
+    # Update the board according to "prompt_x", 
+    for i in range(self.height):
+      for j in range(self.width):
+        if (i, j) in self.prompt_x:
+          self.board[i][j] = X
 
   def won(self):
     """
@@ -96,9 +139,11 @@ class Nonogram():
     # Check if o_set(player's decision) equals ans(answer)
     if self.o_set != self.ans: 
       return False
-    # Check if num of X and O adds up to total cells num
-    if len(self.x_set) + len(self.o_set) != self.height * self.width:
-      return False
+
+    # Compare o_set with ans
+    for cell in self.o_set:
+      if cell not in self.ans:
+        return False
 
     return True
 
