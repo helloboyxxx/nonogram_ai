@@ -44,8 +44,8 @@ class Nonogram():
     """
     # raise NotImplementedError
 
-    h_task = [ [2, 1], [3, 1], [1, 3], [3, 1], [2, 1] ]
-    v_task = [ [5], [2, 2], [3], [1], [5] ]
+    v_task = [ [2, 1], [1, 1, 1], [1, 3], [3, 1], [2, 1] ]
+    h_task = [ [5], [1, 2], [3], [1], [5] ]
 
     return h_task, v_task
 
