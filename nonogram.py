@@ -82,7 +82,9 @@ class Nonogram():
     row = cell[0]
     col = cell[1]
     if self.board[row][col] != EMPTY:
-      raise RuntimeError(f"Position ({row}, {col}) has been occupied")
+      # raise RuntimeError(f"Position ({row}, {col}) has been occupied")
+      print(f"Position ({row}, {col}) has been occupied")
+      return
 
     self.board[row][col] = symbol
     if symbol == O:
@@ -90,13 +92,23 @@ class Nonogram():
     elif symbol == X:
       self.x_set.append(cell)
 
+  def clear_line(self):
+    """
+    This is a game feature of the game app on iPhone,
+    that one line will be automatically cleared if all tiles are correctly revealed
+    So all crosses that are not clicked should be also added to the x_set
+    """
+    pass
+
   def check_move(self, symbol, cell):
     """
     Given the moves made by player, return True if this move is correct,
     return False if this move is wrong
     """
     if self.board[cell[0]][cell[1]] != EMPTY:
-      raise RuntimeError(f"Position ({cell[0]}, {cell[1]}) has been occupied")
+      # raise RuntimeError(f"Position ({cell[0]}, {cell[1]}) has been occupied")
+      print(f"Position ({cell[0]}, {cell[1]}) has been occupied")
+      return True
     
     # TODO
     print("TO BE CHECKED")
