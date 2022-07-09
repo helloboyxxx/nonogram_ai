@@ -23,11 +23,12 @@ height, width, prompt_x, ans, h_task, v_task = Nonogram.load_data(sys.argv[1])
 # ai = MinesweeperAI(height=HEIGHT, width=WIDTH)
 game = Nonogram(height, width, prompt_x, ans, h_task, v_task)
 
-# Keep track of revealed cells and crossed cells
-tiles = set()
-crosses = set()
-lost = False
+# # Keep track of revealed cells and crossed cells
+# tiles = game.o_set
+# crosses = game.x_set
+# lost = False
 
+lost = False
 
 # Constants
 WIDTH, HEIGHT = 600, 600
@@ -92,6 +93,7 @@ while True:
     pygame.draw.rect(screen, WHITE, task_rect)
     pygame.draw.rect(screen, PINK, task_rect, 2)
   
+  # Draw v_tasks
   for i in range(COLS):
     task_rect = pygame.Rect(
       task_origin[0] + (H_TASK_NUM * cell_size) + (i * cell_size),
@@ -100,6 +102,10 @@ while True:
     )
     pygame.draw.rect(screen, WHITE, task_rect)
     pygame.draw.rect(screen, PINK, task_rect, 2)
+
+  # Get info from the game board
+  tiles = game.o_set
+  crosses = game.x_set
 
   # Draw board
   cells = []
@@ -131,28 +137,29 @@ while True:
       row.append(rect)  # So every small rect is store in a row, then in cells
     cells.append(row)   # Here, cells are used for detecting the collidepoint of the mouse
 
+  # Check if won already
+  if game.won():
+    print("You have solved this puzzle, you won!!!")
+    # Here, we can display text "WIN" if needed
 
   move = None
   symbol = None
 
   left, _, right = pygame.mouse.get_pressed()
 
-  # Check for a right-click to add a cross
-  if right == 1 and not lost: 
+  # Right-click to add a cross
+  if right == 1: 
     mouse = pygame.mouse.get_pos()
-    for i in range(ROWS):
-      for j in range(COLS):
-        if cells[i][j].collidepoint(mouse) and (i, j) not in crosses:
-          # if (i, j) in crosses:
-          #   crosses.remove((i, j))
-          # else: 
-          move = (i, j)
-          symbol = X
-          time.sleep(0.2)
+    if not lost:
+      for i in range(ROWS):
+        for j in range(COLS):
+          if cells[i][j].collidepoint(mouse) and (i, j) not in crosses:
+            move = (i, j)
+            symbol = X
+  
+  # Left-click to add a tile
   elif left == 1:
     mouse = pygame.mouse.get_pos()
-
-    # User made move
     if not lost:
       for i in range(ROWS):
         for j in range(COLS):
@@ -160,25 +167,19 @@ while True:
             move = (i, j)
             symbol = O
     
-    # Make move and update board
-    if move != None and symbol != None:
-      if game.check_move(symbol, move):
-        game.update_board(symbol, move)
-      else: 
-        game.update_board(Nonogram.reverse_symbol(symbol), move)
-        print("Wrong move!")  # Add some UI?
-        game.hearts -= 1
-      
-      if game.hearts == 0:
-        game.reset()
-      
-      if game.won():
-        print("You have solved this puzzle, you won!!!")
+  # Make move and update board
+  if move != None:
+    if game.check_move(symbol, move):
+      game.update_board(symbol, move)
+    else: 
+      game.update_board(Nonogram.reverse_symbol(symbol), move)
+      print("Wrong move!")  # Add some UI?
+      game.hearts -= 1
+      time.sleep(1)
     
-    time.sleep(0.3)
-
-
-
+    if game.hearts == 0:
+      lost = True
+      game.reset()
 
   pygame.display.flip()
 

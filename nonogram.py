@@ -15,8 +15,8 @@ class Nonogram():
     self.width = width
 
     self.prompt_x = prompt_x
-    self.x_set = []
-    self.o_set = [] # At first, player has found no "O"
+    self.x_set = set()
+    self.o_set = set() # At first, player has found no "O"
 
     self.board = []
 
@@ -55,8 +55,8 @@ class Nonogram():
     """
     height = None
     width = None
-    prompt_x = []
-    ans = []
+    prompt_x = set()
+    ans = set()
     with open(filename) as f: 
       lines = f.read().splitlines()
       height = len(lines)
@@ -65,9 +65,9 @@ class Nonogram():
         # c is the index of the cell within that line
         for c in range(len(line)):
           if line[c] == PROMPT:
-            prompt_x.append((idx, c))
+            prompt_x.add((idx, c))
           if line[c] == O:
-            ans.append((idx, c))
+            ans.add((idx, c))
 
     # TODO
     h_task, v_task = Nonogram.count_task(filename)
@@ -88,9 +88,9 @@ class Nonogram():
 
     self.board[row][col] = symbol
     if symbol == O:
-      self.o_set.append(cell)
+      self.o_set.add(cell)
     elif symbol == X:
-      self.x_set.append(cell)
+      self.x_set.add(cell)
 
   def clear_line(self):
     """
@@ -127,7 +127,7 @@ class Nonogram():
   
   def reset(self):
     self.x_set = self.prompt_x
-    self.o_set = []
+    self.o_set = set()
     self.board = []
     self.hearts = 3
 
