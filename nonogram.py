@@ -4,7 +4,7 @@ PROMPT = "#"
 EMPTY = None
 
 class Nonogram():
-  def __init__(self, height, width, prompt_x, ans, h_task, v_task):
+  def __init__(self, height, width, prompt_x, ans):
     if ans == None or len(ans) == 0:  # Do we need to check if the ans is valid?
       raise RuntimeError("Answer not given. Please give an answer set")
     
@@ -155,3 +155,16 @@ class Nonogram():
         return False
 
     return True
+
+class NonogramAI():
+  def __init__(self, height, width, h_task, v_task, prompt_x):
+    # Info of the board
+    self.height = height
+    self.width = width
+    self.h_task = h_task
+    self.v_task = v_task
+
+    # Keep recording 
+    self.x_set = prompt_x
+    self.o_set = set()
+
