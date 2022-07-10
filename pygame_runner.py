@@ -36,6 +36,7 @@ ROWS, COLS = height, width
 H_TASK_NUM = max_task_num(h_task) # Maximum task num
 V_TASK_NUM = max_task_num(v_task)
 
+# Color
 PINK = (237, 90, 154)
 BLACK = (10, 10, 10)
 WHITE = (255, 255, 255)

@@ -1,6 +1,3 @@
-from dataclasses import dataclass
-from itertools import count
-
 O = "O"
 X = "X"
 PROMPT = "#"
@@ -158,5 +155,3 @@ class Nonogram():
         return False
 
     return True
-
-
