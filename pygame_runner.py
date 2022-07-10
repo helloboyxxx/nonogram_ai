@@ -21,7 +21,7 @@ height, width, prompt_x, ans, h_task, v_task = Nonogram.load_data(sys.argv[1])
 
 # Create game and AI agent
 # ai = MinesweeperAI(height=HEIGHT, width=WIDTH)
-game = Nonogram(height, width, prompt_x, ans, h_task, v_task)
+game = Nonogram(height, width, prompt_x, ans)
 
 # # Keep track of revealed cells and crossed cells
 # tiles = game.o_set
