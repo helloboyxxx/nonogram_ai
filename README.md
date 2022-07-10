@@ -9,7 +9,7 @@ Now we wish to use pygame to build this game quickly, then we want to create an 
 
 ### Usage: 
 
-python runner.py /data/tree.txt
+python runner.py ./data/tree.txt
 
 
 
