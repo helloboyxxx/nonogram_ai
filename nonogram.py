@@ -40,9 +40,47 @@ class Nonogram():
     """
     # raise NotImplementedError
 
-    v_task = [ [2, 1], [1, 1, 1], [1, 3], [3, 1], [2, 1] ]
-    h_task = [ [5], [1, 2], [3], [1], [5] ]
+    with open(filename) as f:
+      # read board info
+      lines = f.read().splitlines()
+      height = len(lines)
+      width = len(lines[0])
+      # initialize h and v task lists
+      h_task = []
+      v_task = []
+      # add info in h task lists 
+      for a in range(height):
+        h_task.append([])
+        num = 0
+        for b in range(width):
+          if lines[a][b] == O:
+            num = num + 1
+            if b == width - 1:
+              h_task[a].append(num)
+          elif num != 0:
+            h_task[a].append(num)
+            num = 0
+      # add info in v task lists
+      for j in range(width):
+        v_task.append([])
+        num = 0
+        for i in range(height):
+          if lines[i][j] == O:
+            num = num + 1
+            if i == height - 1:
+              v_task[j].append(num)
+          elif num != 0:
+            v_task[j].append(num)
+            num = 0
+    
+    #print(h_task)
+    #print(v_task)
 
+    """
+    example of v_task and h_task to test pygame_runner:
+    v_task = [ [2, 1], [1, 2], [1, 3], [3, 1], [2, 1] ]
+    h_task = [ [5], [1, 2], [3], [1], [5] ]
+    """
     return h_task, v_task
 
   def load_data(filename):
