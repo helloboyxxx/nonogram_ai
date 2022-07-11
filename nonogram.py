@@ -276,6 +276,26 @@ class NonogramAI():
 
     return line, pattern, task
 
+  def fill_whole_line(p_len, task): 
+    """
+    Returns a pattern completely filled. 
+    Consider p_len = 10, task = [4, 5]
+    Consider p_len = 10, task = [2, 4, 2]
+    """
+    pattern = []
+    for num_idx in range(len(task)): 
+      for i in range(task[num_idx]):
+        pattern.append(O)
+      if num_idx != len(task) - 1:  # not the last element
+        pattern.append(X)
+    return pattern
+
+  def fill_mid(pattern, diff):
+    edge_num = (len(pattern) - diff) / 2
+    for i in range(len(pattern)):
+      if edge_num <= i < len(pattern) - edge_num:
+        pattern[i] = O
+    return pattern
 
   def solve_line(self, pattern, task):
     """
@@ -286,19 +306,29 @@ class NonogramAI():
     If this line is cleared, add index to self.cleared_line
     """
     # pattern: [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY]
-    # task: [1]
-    # task: [2]
     # task: [3]
     # task: [4]
-    # task: [5]
-    # task: [1, 3]
-    # task: [3, 1]
     # task: [2, 2]
     # task: [1, 2]
     # task: [2, 1]
     # task: [1, 1, 1]
     
     p_len = len(pattern)
-    # If the task fill the whole line
-    if task[0] == p_len:
-      pattern = [O] * p_len
+
+    assert(sum(task) + len(task) - 1 <= p_len)
+
+    # If the task adds up to the whole line
+    # task = [1, 3]
+    # task = [5]  should be able to include this task as well
+    if sum(task) + len(task) - 1 == p_len:
+      pattern = NonogramAI.fill_whole_line(p_len, task)
+
+    # Single task but greater than half of p_len
+    elif len(task) == 1: 
+      diff = 2 * task[0] - p_len
+      if diff > 0:
+        pattern = NonogramAI.fill_mid(pattern, diff)
+
+
+
+    return pattern
