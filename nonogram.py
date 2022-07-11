@@ -38,8 +38,6 @@ class Nonogram():
     v_task = [ [5], [2, 2], [3], [1], [5] ]
     These are the data from tree.txt
     """
-    # raise NotImplementedError
-
     with open(filename) as f:
       # read board info
       lines = f.read().splitlines()
@@ -72,10 +70,6 @@ class Nonogram():
           elif num != 0:
             v_task[j].append(num)
             num = 0
-    
-    #print(h_task)
-    #print(v_task)
-
     """
     example of v_task and h_task to test pygame_runner:
     v_task = [ [2, 1], [1, 2], [1, 3], [3, 1], [2, 1] ]
@@ -103,7 +97,6 @@ class Nonogram():
           if line[c] == O:
             ans.add((idx, c))
 
-    # TODO
     h_task, v_task = Nonogram.count_task(filename)
     return height, width, prompt_x, ans, h_task, v_task
 
@@ -116,7 +109,6 @@ class Nonogram():
     row = cell[0]
     col = cell[1]
     if self.board[row][col] != EMPTY:
-      # raise RuntimeError(f"Position ({row}, {col}) has been occupied")
       print(f"Position ({row}, {col}) has been occupied")
       return
 
@@ -222,6 +214,19 @@ class NonogramAI():
     self.next_idx = 0
     self.cleared_line = set()  # records the lines indexes that are all cleared
   
+  def make_move(self):
+    """
+    Returns a move if still available. Otherwise returns None.
+    """
+    move = None
+    # No known cell left. Look for another line
+    if len(self.known_cells) == 0:
+      line, pattern, task = self.get_next_line()
+      self.solve_line(pattern, task)
+    
+    move = self.known_cells.pop()
+    return move
+
   def get_next_line(self):
     """
     This function returns an array of cell positions so that it is easier 
@@ -272,28 +277,24 @@ class NonogramAI():
     return line, pattern, task
 
 
-  def solve_line(self, line, task):
+  def solve_line(self, pattern, task):
     """
-    Given an array of positions (a line of cells to be checked), this function should 
-    be able to figure out cells' position to be added to known_cells.
-    Since we have the info of revealed cells, together with
+    Given a pattern (a line of symbols), this function should return 
+    an updated new pattern (or not changed if cannot add new symbol).
+    Since we have the info of revealed cells on the board, together with
     info from given tasks, we should be able to do this job. 
-
-    Returns a new pattern, a new line a symbols, if able to update any new cells.
     If this line is cleared, add index to self.cleared_line
     """
+    # pattern: [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY]
+    # task: [1]
+    # task: [2]
+    # task: [3]
+    # task: [4]
+    # task: [5]
+    # task: [1, 3]
+    # task: [3, 1]
+    # task: [2, 2]
+    # task: [1, 2]
+    # task: [2, 1]
+    # task: [1, 1, 1]
     pass
-
-
-  def make_move(self):
-    """
-    Returns a move if still available. Otherwise returns None.
-    """
-    move = None
-    # No known cell left. Look for another line
-    if len(self.known_cells) == 0:
-      line, pattern, task = self.get_next_line()
-      self.solve_line(pattern, task)
-    
-    move = self.known_cells.pop()
-    return move
