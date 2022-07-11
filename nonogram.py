@@ -22,7 +22,6 @@ class Nonogram():
 
     self.reset()
 
-
   def reverse_symbol(symbol):
     if symbol == O:
       return X
@@ -164,7 +163,99 @@ class NonogramAI():
     self.h_task = h_task
     self.v_task = v_task
 
-    # Keep recording 
+    # Keep tracking status on the board 
     self.x_set = prompt_x
     self.o_set = set()
+    self.known_cells = set()  # cells for making move
 
+    # Store data in board
+    self.board = []
+    for row in range(height):
+      line = []
+      for col in range(width):
+        if (row, col) in self.x_set:
+          line.append(X)
+        else:
+          line.append(EMPTY)
+      self.board.append(line)
+    
+    # Used to keep track of which line to be check next in get_next_line()
+    # Maximum = height + width. Equals -1 if no more to check
+    self.next_idx = 0
+    self.cleared_line = set()  # records the lines indexes that are all cleared
+  
+  def get_next_line(self):
+    """
+    This function returns an array of cell positions so that it is easier 
+    to fill in known cells.
+    Returns a pattern containing a line of symbols (X O and EMPTY) so that it is easier 
+    when solving one line.
+    Returns a task as well
+    Return None, None, None if the game has ends
+    """
+    # No more to check
+    if self.next_idx == -1:
+      return None, None, None
+
+    # Use the self.next_idx to get a line
+    line = []
+    pattern = []
+    task = None
+    if self.next_idx < self.height:  # Get a row
+      row_idx = self.next_idx
+      task = self.h_task[row_idx]
+      for col_idx in range(self.width):
+        line.append((row_idx, col_idx))
+
+    # else, we retrive line from col
+    col_idx = self.next_idx - self.height
+    task = self.v_task[col_idx]
+    for row_idx in range(self.height):
+      line.append((row_idx, col_idx))
+
+    # update self.next_idx
+    old_idx = self.next_idx
+    while True:
+      self.next_idx += 1
+      if self.next_idx == self.height + self.width:
+        self.next_idx = 0
+      # Skip already-checked lines
+      if self.next_idx in self.cleared_line:  
+        continue
+
+      # change to -1 to mark that no more lines needed to be checked
+      if self.next_idx == old_idx:
+        self.next_idx = -1
+        break
+      
+    assert(task != None)
+    assert(0 < self.next_idx < (self.height + self.width))
+
+    return line, pattern, task
+
+
+  def solve_line(self, line, task):
+    """
+    Given an array of positions (a line of cells to be checked), this function should 
+    be able to figure out cells' position to be added to known_cells.
+    Since we have the info of revealed cells, together with
+    info from given tasks, we should be able to do this job. 
+
+    Returns a new pattern, a new line a symbols, if able to update any new cells.
+    If this line is cleared, add index to self.cleared_line
+    """
+    pass
+
+
+  def make_move(self):
+    """
+    Returns a move if still available. Otherwise returns None.
+    """
+    move = None
+    # No known cell left. Look for another line
+    if len(self.known_cells) == 0:
+      line, pattern, task = self.get_next_line()
+      self.solve_line(pattern, task)
+    
+    move = self.known_cells.pop()
+    return move
