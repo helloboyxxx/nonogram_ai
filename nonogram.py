@@ -297,4 +297,8 @@ class NonogramAI():
     # task: [1, 2]
     # task: [2, 1]
     # task: [1, 1, 1]
-    pass
+    
+    p_len = len(pattern)
+    # If the task fill the whole line
+    if task[0] == p_len:
+      pattern = [O] * p_len
