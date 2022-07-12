@@ -1,3 +1,6 @@
+from curses import newpad
+
+
 O = "O"
 X = "X"
 PROMPT = "#"
@@ -196,7 +199,7 @@ class NonogramAI():
     # Keep tracking status on the board 
     self.x_set = prompt_x
     self.o_set = set()
-    self.known_cells = set()  # cells for making move
+    self.known_cells = set()  # cells for making move, a set of pairs ((row, col), symbol)
 
     # Store data in board
     self.board = []
@@ -222,11 +225,38 @@ class NonogramAI():
     # No known cell left. Look for another line
     if len(self.known_cells) == 0:
       line, pattern, task = self.get_next_line()
-      self.solve_line(pattern, task)
-    
+      print(f"LINE: {line}")
+      print(f"PATTERN: {pattern}")
+      print(f"TASK: {task}")
+      if line == None and pattern == None and task == None:
+        return None
+      new_pattern = self.solve_line(pattern, task)
+      self.update_line(line, pattern, new_pattern)
+
     move = self.known_cells.pop()
     return move
 
+  def update_line(self, line, pattern, new_pattern):
+    for symbol_idx in range(len(new_pattern)):
+      if new_pattern[symbol_idx] != pattern[symbol_idx]:
+        
+        row_num = line[symbol_idx][0]
+        col_num = line[symbol_idx][1]
+
+        # Add this symbol to known_cells since this is a new cell determined
+        # self.known_cells.add((row_num, col_num))
+        self.known_cells.add(((row_num, col_num), new_pattern[symbol_idx]))
+
+        # Update the board, x_set, and o_set
+        if pattern[symbol_idx] == O:
+          self.board[row_num][col_num] = O
+          self.o_set.add((row_num, col_num))
+
+        elif pattern[symbol_idx] == X:
+          self.board[row_num][col_num] = X
+          self.x_set.add((row_num, col_num))
+      
+    
   def get_next_line(self):
     """
     This function returns an array of cell positions so that it is easier 
@@ -244,17 +274,21 @@ class NonogramAI():
     line = []
     pattern = []
     task = None
-    if self.next_idx < self.height:  # Get a row
+
+    # Get a row
+    if self.next_idx < self.height:
       row_idx = self.next_idx
       task = self.h_task[row_idx]
+      pattern = self.board[row_idx]
       for col_idx in range(self.width):
         line.append((row_idx, col_idx))
-
-    # else, we retrive line from col
-    col_idx = self.next_idx - self.height
-    task = self.v_task[col_idx]
-    for row_idx in range(self.height):
-      line.append((row_idx, col_idx))
+    # Get a col
+    else: 
+      col_idx = self.next_idx - self.height
+      task = self.v_task[col_idx]
+      for row_idx in range(self.height):
+        line.append((row_idx, col_idx))
+        pattern.append(self.board[row_idx][col_idx])
 
     # update self.next_idx
     old_idx = self.next_idx
@@ -263,8 +297,8 @@ class NonogramAI():
       if self.next_idx == self.height + self.width:
         self.next_idx = 0
       # Skip already-checked lines
-      if self.next_idx in self.cleared_line:  
-        continue
+      if self.next_idx not in self.cleared_line:  
+        break
 
       # change to -1 to mark that no more lines needed to be checked
       if self.next_idx == old_idx:
@@ -272,7 +306,7 @@ class NonogramAI():
         break
       
     assert(task != None)
-    assert(0 < self.next_idx < (self.height + self.width))
+    assert(0 <= self.next_idx < (self.height + self.width))
 
     return line, pattern, task
 
@@ -314,7 +348,8 @@ class NonogramAI():
     # task: [1, 1, 1]
     
     p_len = len(pattern)
-
+    print(f"task: {task}")
+    print(f"pattern: {pattern}")
     assert(sum(task) + len(task) - 1 <= p_len)
 
     # If the task adds up to the whole line

@@ -22,7 +22,6 @@ height, width, prompt_x, ans, h_task, v_task = Nonogram.load_data(sys.argv[1])
 # Create game and AI agent
 game = Nonogram(height, width, prompt_x, ans)
 ai = NonogramAI(height, width, h_task, v_task, prompt_x)
-ai.get_next_line()
 
 # # Keep track of revealed cells and crossed cells
 # tiles = game.o_set
