@@ -27,7 +27,7 @@ while True:
 
   move = None
   symbol = None
-  if move_input[0] == "ai":
+  if move_input[0] == "a":
     move_info = ai.make_move()
     move = move_info[0]
     symbol = move_info[1]
