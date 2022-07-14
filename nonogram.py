@@ -1,3 +1,6 @@
+from curses.panel import new_panel
+import time
+
 O = "O"
 X = "X"
 PROMPT = "#"
@@ -137,12 +140,10 @@ class Nonogram():
       return True
     
     # TODO
-    print("TO BE CHECKED")
-
     return True
 
   def print_board(self):
-    print(f"{self.hearts} hearts left")
+    # print(f"{self.hearts} hearts left")
     for i in range(self.height):
       for j in range(self.width):
         if self.board[i][j] == EMPTY:
@@ -196,7 +197,7 @@ class NonogramAI():
     # Keep tracking status on the board 
     self.x_set = prompt_x
     self.o_set = set()
-    self.known_cells = set()  # cells for making move
+    self.known_cells = set()  # cells for making move, a set of pairs ((row, col), symbol)
 
     # Store data in board
     self.board = []
@@ -214,6 +215,12 @@ class NonogramAI():
     self.next_idx = 0
     self.cleared_line = set()  # records the lines indexes that are all cleared
   
+  def print_board(self):
+    print("BOARD: ")
+    for row in self.board:
+      print(row)
+
+
   def make_move(self):
     """
     Returns a move if still available. Otherwise returns None.
@@ -221,12 +228,45 @@ class NonogramAI():
     move = None
     # No known cell left. Look for another line
     if len(self.known_cells) == 0:
-      line, pattern, task = self.get_next_line()
-      self.solve_line(pattern, task)
-    
+      # Keep trying to solve lines for some new cells
+      while len(self.known_cells) == 0:
+        # time.sleep(0.1)
+        line, pattern, task = self.get_next_line()
+        # No more moves to make, the game should end
+        if line == None and pattern == None and task == None:
+          return None
+        
+        new_pattern = self.solve_line(pattern, task)
+        # print(f"NEW PATTERN: \n{new_pattern}")
+        # print(f"OLD PATTERN: \n{pattern}")
+        self.update_line(line, pattern, new_pattern)
     move = self.known_cells.pop()
     return move
 
+
+  def update_line(self, line, pattern, new_pattern):
+    # print(f"NEW PATTERN: \n{new_pattern}")
+    # print(f"OLD PATTERN: \n{pattern}")
+    for symbol_idx in range(len(new_pattern)):
+      if new_pattern[symbol_idx] != pattern[symbol_idx]:
+        
+        row_num = line[symbol_idx][0]
+        col_num = line[symbol_idx][1]
+
+        # Add this symbol to known_cells since this is a new cell determined
+        # self.known_cells.add((row_num, col_num))
+        self.known_cells.add(((row_num, col_num), new_pattern[symbol_idx]))
+
+        # Update the board, x_set, and o_set
+        if new_pattern[symbol_idx] == O:
+          self.board[row_num][col_num] = O
+          self.o_set.add((row_num, col_num))
+
+        elif new_pattern[symbol_idx] == X:
+          self.board[row_num][col_num] = X
+          self.x_set.add((row_num, col_num))
+      
+    
   def get_next_line(self):
     """
     This function returns an array of cell positions so that it is easier 
@@ -244,17 +284,21 @@ class NonogramAI():
     line = []
     pattern = []
     task = None
-    if self.next_idx < self.height:  # Get a row
+
+    # Get a row
+    if self.next_idx < self.height:
       row_idx = self.next_idx
       task = self.h_task[row_idx]
+      pattern = self.board[row_idx]
       for col_idx in range(self.width):
         line.append((row_idx, col_idx))
-
-    # else, we retrive line from col
-    col_idx = self.next_idx - self.height
-    task = self.v_task[col_idx]
-    for row_idx in range(self.height):
-      line.append((row_idx, col_idx))
+    # Get a col
+    else: 
+      col_idx = self.next_idx - self.height
+      task = self.v_task[col_idx]
+      for row_idx in range(self.height):
+        line.append((row_idx, col_idx))
+        pattern.append(self.board[row_idx][col_idx])
 
     # update self.next_idx
     old_idx = self.next_idx
@@ -263,8 +307,8 @@ class NonogramAI():
       if self.next_idx == self.height + self.width:
         self.next_idx = 0
       # Skip already-checked lines
-      if self.next_idx in self.cleared_line:  
-        continue
+      if self.next_idx not in self.cleared_line:  
+        break
 
       # change to -1 to mark that no more lines needed to be checked
       if self.next_idx == old_idx:
@@ -272,9 +316,10 @@ class NonogramAI():
         break
       
     assert(task != None)
-    assert(0 < self.next_idx < (self.height + self.width))
+    assert(0 <= self.next_idx < (self.height + self.width))
 
     return line, pattern, task
+
 
   def fill_whole_line(p_len, task): 
     """
@@ -290,12 +335,24 @@ class NonogramAI():
         pattern.append(X)
     return pattern
 
+
   def fill_mid(pattern, diff):
     edge_num = (len(pattern) - diff) / 2
     for i in range(len(pattern)):
       if edge_num <= i < len(pattern) - edge_num:
         pattern[i] = O
     return pattern
+
+
+  def clear_line(self, pattern, task):
+    # Check if count of O is equal to sum of the num in task
+    if pattern.count(O) == sum(task):
+      # fill the rest of hte pattern with X
+      for i in range(len(pattern)):
+        if pattern[i] == EMPTY:
+          pattern[i] = X
+        
+
 
   def solve_line(self, pattern, task):
     """
@@ -305,30 +362,25 @@ class NonogramAI():
     info from given tasks, we should be able to do this job. 
     If this line is cleared, add index to self.cleared_line
     """
-    # pattern: [EMPTY, EMPTY, EMPTY, EMPTY, EMPTY]
-    # task: [3]
-    # task: [4]
-    # task: [2, 2]
-    # task: [1, 2]
-    # task: [2, 1]
-    # task: [1, 1, 1]
-    
-    p_len = len(pattern)
+    # print(f"OLD PATTERN: \n{pattern}")
+    new_pattern = pattern.copy()
 
+    p_len = len(new_pattern)
     assert(sum(task) + len(task) - 1 <= p_len)
 
     # If the task adds up to the whole line
     # task = [1, 3]
     # task = [5]  should be able to include this task as well
     if sum(task) + len(task) - 1 == p_len:
-      pattern = NonogramAI.fill_whole_line(p_len, task)
+      new_pattern = NonogramAI.fill_whole_line(p_len, task)
 
     # Single task but greater than half of p_len
     elif len(task) == 1: 
       diff = 2 * task[0] - p_len
       if diff > 0:
-        pattern = NonogramAI.fill_mid(pattern, diff)
+        new_pattern = NonogramAI.fill_mid(new_pattern, diff)
 
 
-
-    return pattern
+    # Use clear_line to make sure this line will be no empty place if all tiles are found
+    self.clear_line(new_pattern, task)
+    return new_pattern
