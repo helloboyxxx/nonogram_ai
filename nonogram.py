@@ -320,20 +320,58 @@ class NonogramAI():
 
     return line, pattern, task
 
+  def is_whole(pattern, task):
+    """
+    helper function of fill_whole_line()
+    return True and everything needed if this pattern 
+    return 
+    """
+    pass
 
-  def fill_whole_line(p_len, task): 
+  def fill_whole_line(pattern, task): 
     """
-    Returns a pattern completely filled. 
-    Consider p_len = 10, task = [4, 5]
-    Consider p_len = 10, task = [2, 4, 2]
+    Directly modify pattern to fill in all cells
+    Consider len(new_pattern) = 10, task = [4, 5]
+    Consider len(new_pattern) = 10, task = [2, 4, 2]
+    If we have pattern = [X, EMPTY, EMPTY, EMPTY, X], task = [1, 1], 
+    then we should also fill it 
     """
-    pattern = []
-    for num_idx in range(len(task)): 
-      for i in range(task[num_idx]):
-        pattern.append(O)
-      if num_idx != len(task) - 1:  # not the last element
-        pattern.append(X)
-    return pattern
+    p_len = len(pattern)
+    start_idx = 0   # Where the "middle part" starts
+    end_idx = p_len # Where the "middle part" ends
+    if len(task) == 1:
+      x_count = 0
+      # Count number of positions in the middle to be filled:
+      for i in range(p_len):
+        if pattern[i] == X:
+          x_count += 1
+        else: 
+          break
+
+      start_idx = x_count
+
+      for i in range(p_len - 1, -1, -1):
+        if pattern[i] == X:
+          x_count += 1
+        else: 
+          break
+
+      end_idx = p_len - (x_count - start_idx)
+      
+      print(f"x_count: {x_count}")
+      print(f"sum(task) + len(task) - 1: {sum(task) + len(task) - 1}")
+
+      # Check if the "middle" part can be fully filled
+      if sum(task) + len(task) - 1 == p_len-x_count: 
+        cur_idx = start_idx  # Keep track of which cell to change
+        for num in task:
+          for i in range(num):  # Fill in consecutive Os
+            pattern[cur_idx] = O
+            cur_idx += 1
+          if cur_idx != end_idx:  # Add an X in between parts
+            pattern[cur_idx] = X
+            cur_idx += 1
+          
 
 
   def fill_mid(pattern, diff):
@@ -362,21 +400,19 @@ class NonogramAI():
     info from given tasks, we should be able to do this job. 
     If this line is cleared, add index to self.cleared_line
     """
-    # print(f"OLD PATTERN: \n{pattern}")
+    # print(f"PATTERN: \n{pattern}")
     new_pattern = pattern.copy()
 
-    p_len = len(new_pattern)
-    assert(sum(task) + len(task) - 1 <= p_len)
+    assert(sum(task) + len(task) - 1 <= len(new_pattern))
 
     # If the task adds up to the whole line
     # task = [1, 3]
     # task = [5]  should be able to include this task as well
-    if sum(task) + len(task) - 1 == p_len:
-      new_pattern = NonogramAI.fill_whole_line(p_len, task)
+    new_pattern = NonogramAI.fill_whole_line(new_pattern, task)
 
     # Single task but greater than half of p_len
-    elif len(task) == 1: 
-      diff = 2 * task[0] - p_len
+    if len(task) == 1: 
+      diff = 2 * task[0] - len(new_pattern)
       if diff > 0:
         new_pattern = NonogramAI.fill_mid(new_pattern, diff)
 
