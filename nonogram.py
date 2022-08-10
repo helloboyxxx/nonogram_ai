@@ -1,10 +1,9 @@
 from curses.panel import new_panel
 import time
 
-from numpy import take
 
 O = "O"
-X = "X"
+X = "•"
 PROMPT = "#"
 EMPTY = None
 
@@ -235,16 +234,21 @@ class NonogramAI():
     # Keep trying to solve lines for some new cells. If there are known cells left, then this loop is skipped
     while len(self.known_cells) == 0:
       line, pattern, task = self.get_next_line()
+      print(f"GIVEN PATTERN: {pattern} at line: {line}")
+
       # No more moves to make, the game should end
       if line == None and pattern == None and task == None:
         return None
       
       # new_pattern = pattern.copy()
-      new_pattern = self.solve_line(pattern, task)  # solve_line will change the original pattern
+      new_pattern = self.solve_line(pattern, task)  # solve_line should not change the original pattern
       self.update_line(line, pattern, new_pattern)
 
-      break
+      # break  # this line is added for testing. Should be deleted after tests
   
+    if len(self.known_cells) == 0:
+      return None
+    
     move = self.known_cells.pop()
     return move
 
@@ -255,8 +259,8 @@ class NonogramAI():
     Also add cells to self.known_cells if we found new cells. 
     Here we compare the two patterns to look for changes
     """
-    print(f"NEW PATTERN: \n{new_pattern}")
-    print(f"OLD PATTERN: \n{pattern}")
+    # print(f"NEW PATTERN: \n{new_pattern}")
+    # print(f"OLD PATTERN: \n{pattern}")
     for symbol_idx in range(len(new_pattern)):
       if new_pattern[symbol_idx] != pattern[symbol_idx]:
         
@@ -335,39 +339,45 @@ class NonogramAI():
     Given a pattern, solve_line will return a new pattern if new cells can be marked
     """
 
-    if NonogramAI.is_empty_line(pattern):
-      pattern = NonogramAI.fill_empty_line(pattern, task)
-    else:
-      # I need to classify examples to design this part 
-      pass
+    # First we need to check if we can clear this line 
+
+
+    # Then we use dumb_fill to add more info to this line
+    pattern = NonogramAI.dumb_fill(pattern, task)
+
+    # # Solve empty lines
+    # if NonogramAI.is_empty_line(pattern):
+    #   pattern = NonogramAI.fill_empty_line(pattern, task)
+    # else:
+    #   # I need to classify examples to design this part 
+    #   pass
     
     return pattern
 
 
-  def is_empty_line(pattern):
-    for symbol in pattern:
-      if symbol != EMPTY:
-        return False
-    return True
+  # def is_empty_line(pattern):
+  #   for symbol in pattern:
+  #     if symbol != EMPTY:
+  #       return False
+  #   return True
 
 
-  def fill_empty_line(pattern, task):
-    """
-    Since this pattern is empty, we can run some simple functions
-    to check if some cells can be determined
-    """
-    left_pattern, right_pattern = NonogramAI.dumb_fill(pattern, task)
-    # print(f"LEFT PATTER: {left_pattern}")
-    # print(f"RIGHT PATTER: {right_pattern}")
-    pattern = NonogramAI.fill_overlapped(left_pattern, right_pattern)
-    return pattern
+  # def fill_empty_line(pattern, task):
+  #   """
+  #   Since this pattern is empty, we can run some simple functions
+  #   to check if some cells can be determined
+  #   """
+  #   left_pattern, right_pattern = NonogramAI.dumb_fill(pattern, task)
+  #   # print(f"LEFT PATTER: {left_pattern}")
+  #   # print(f"RIGHT PATTER: {right_pattern}")
+  #   pattern = NonogramAI.fill_overlapped(left_pattern, right_pattern)
+  #   return pattern
 
 
 
   def dumb_fill(pattern, task):
     """
-    This function will return two patterns.
-    left_pattern is filled directly from the left side
+    This function will return a new pattern by choosing the overlaps of two "dumb-filled patterns"
     Reference: https://www.bilibili.com/video/BV1qT4y1C7qc?share_source=copy_web&vd_source=0eea0082c768cd021146964be3ae83a8
     """
     fixed_pattern = []
@@ -385,7 +395,7 @@ class NonogramAI():
     left_pattern = fixed_pattern + empty_space
     right_pattern = empty_space + fixed_pattern    
 
-    return left_pattern, right_pattern
+    return NonogramAI.fill_overlapped(left_pattern, right_pattern)
 
 
   def fill_overlapped(p1, p2):
