@@ -374,7 +374,6 @@ class NonogramAI():
   #   return pattern
 
 
-
   def dumb_fill(pattern, task):
     """
     This function will return a new pattern by choosing the overlaps of two "dumb-filled patterns"
