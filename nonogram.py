@@ -142,6 +142,12 @@ class Nonogram():
       # raise RuntimeError(f"Position ({cell[0]}, {cell[1]}) has been occupied")
       print(f"Position ({cell[0]}, {cell[1]}) has been occupied")
       return True
+    if symbol == O and cell in self.ans:
+      return True
+    elif symbol == X and cell not in self.ans:
+      return True
+    else:
+      return False
     
     # TODO
     return True
